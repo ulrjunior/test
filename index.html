@@ -1,36 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Date Mystère ✨</title>
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-    import { getDatabase, ref, get, set, push, onValue, remove } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-database.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyCNzUwspWX6EOqYHHmueq5nmfTTFV5LPbA",
-      authDomain: "datemystere-c7580.firebaseapp.com",
-      projectId: "datemystere-c7580",
-      storageBucket: "datemystere-c7580.appspot.com",
-      messagingSenderId: "394663564435",
-      appId: "1:394663564435:web:505095cc42c3ad277d6966",
-      measurementId: "G-E4H4BR9C4T",
-      databaseURL: "https://datemystere-c7580-default-rtdb.europe-west1.firebasedatabase.app/"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-
-    window.db = db;
-    window.ref = ref;
-    window.get = get;
-    window.set = set;
-    window.push = push;
-    window.onValue = onValue;
-    window.remove = remove;
-  </script>
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -68,13 +41,14 @@
     .tab.disabled {
       color: #aaa;
       cursor: not-allowed;
+      pointer-events: none;
     }
     .tab.active {
       background: #ffe6e6;
     }
     .container {
       background: white;
-      padding: 30px;
+      padding: 20px;
       border-radius: 20px;
       max-width: 360px;
       width: 100%;
@@ -114,7 +88,7 @@
       background-color: #e67e22;
       margin-top: 10px;
     }
-    button {
+    button.main-action {
       background-color: #ff6f61;
       color: white;
       border: none;
@@ -126,7 +100,7 @@
       transition: 0.3s;
       width: 100%;
     }
-    button:hover {
+    button.main-action:hover {
       background-color: #e85b4f;
     }
     .result {
@@ -139,6 +113,7 @@
       background: #fff9c4;
       border-radius: 12px;
       box-shadow: 0 0 10px rgba(0,0,0,0.05);
+      min-height: 60px;
     }
     .screen {
       display: none;
@@ -162,6 +137,240 @@
 </head>
 <body>
   <h1>🎉 Générateur de Date Mystère</h1>
-  <p>Cette version Firebase nécessite d'être hébergée sur GitHub Pages pour fonctionner correctement.</p>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('margaux')" id="tab-margaux">Idée Margaux</div>
+    <div class="tab disabled" id="tab-ulrich">Idée Ulric ✅</div>
+    <div class="tab" onclick="switchTab('tirage')" id="tab-tirage">Tirage au sort</div>
+  </div>
+
+  <div class="container">
+    <!-- Écran Margaux -->
+    <div id="screen-margaux" class="screen active">
+      <div class="info-message">Ajoute jusqu'à 10 idées de date. ✨<br>Les idées sont partagées entre vous deux.</div>
+      <div id="ideaList"></div>
+      <button class="add-button" onclick="addIdea()">+ Ajouter une idée</button>
+      <button class="reset-button" onclick="resetIdeas()">Réinitialiser</button>
+    </div>
+
+    <!-- Écran Tirage -->
+    <div id="screen-tirage" class="screen">
+      <h2>Tirage au Sort 🎉</h2>
+      <button class="main-action" onclick="drawDate()">Tirer au sort une idée !</button>
+      <div class="result" id="result"></div>
+    </div>
+  </div>
+
+  <script type="module">
+    /************************************
+     * 1. Imports Firebase
+     ************************************/
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      addDoc,
+      updateDoc,
+      deleteDoc,
+      getDocs,
+      doc,
+      onSnapshot
+    } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+
+    /************************************
+     * 2. CONFIG FIREBASE
+     * Remplace l'objet ci-dessous par TA config firebaseConfig
+     * (celle que tu m'as envoyée avec apiKey, authDomain, etc.)
+     ************************************/
+    const firebaseConfig = {
+      apiKey: "AIzaSyCNzUwspWX6EOqYHHmueq5nmfTTFV5LPbA",
+      authDomain: "datemystere-c7580.firebaseapp.com",
+      projectId: "datemystere-c7580",
+      storageBucket: "datemystere-c7580.firebasestorage.app",
+      messagingSenderId: "394663564435",
+      appId: "1:394663564435:web:505095cc42c3ad277d6966",
+      measurementId: "G-E4H4BR9C4T"
+    };
+
+    /************************************
+     * 3. Init Firebase + Firestore
+     ************************************/
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // On va stocker les idées Margaux dans une collection "margauxIdeas"
+    const ideasColRef = collection(db, "margauxIdeas");
+
+    // Cache local pour l'affichage et le tirage
+    // Chaque idée = { id: "...", text: "..." }
+    let margauxIdeasCache = [];
+
+    // Idées Ulric en dur
+    const ulrichIdeas = [
+      "Soirée sous les étoiles au Planétarium (je viens te chercher 🌌)",
+      "Voir un match des Gothiques d’Amiens (hockey 🔥 dans la meilleure division française)",
+      "Tour des estaminets secrets 🍻 (j’en connais 2-3 pépites dans le coin)",
+      "Soirée Podcast 🎧 : je t’interviewe sur un de tes voyages, façon podcast intime",
+      "Soirée Quiz à Lille 🧠 : je t’impressionne (ou te fais rire) avec ma culture plus ou moins fiable 😄"
+    ];
+
+    /************************************
+     * 4. Changement d'onglet (UI)
+     ************************************/
+    function switchTab(tab) {
+      document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+      document.getElementById('tab-' + tab).classList.add('active');
+      document.getElementById('screen-' + tab).classList.add('active');
+    }
+    window.switchTab = switchTab;
+
+    /************************************
+     * 5. Affichage des idées Margaux à l'écran
+     ************************************/
+    function renderIdeaList() {
+      const container = document.getElementById('ideaList');
+      container.innerHTML = "";
+
+      // Limite 10 idées visuellement
+      const ideasToRender = margauxIdeasCache.slice(0, 10);
+
+      ideasToRender.forEach(entry => {
+        const div = document.createElement('div');
+        div.className = 'idea-block';
+
+        // On crée un textarea pré-rempli
+        const textarea = document.createElement('textarea');
+        textarea.value = entry.text || "";
+        textarea.placeholder = "Idée de date";
+        textarea.addEventListener("input", () => {
+          // on met à jour Firestore à chaque modif
+          updateIdea(entry.id, textarea.value);
+        });
+
+        div.appendChild(textarea);
+        container.appendChild(div);
+      });
+    }
+
+    /************************************
+     * 6. Ajouter une nouvelle idée
+     ************************************/
+    async function addIdea() {
+      // Vérifier qu'on n'a pas déjà 10 idées
+      if (margauxIdeasCache.length >= 10) {
+        alert("Tu ne peux ajouter que 10 idées maximum ✋");
+        return;
+      }
+
+      // Créer une nouvelle idée vide dans Firestore
+      await addDoc(ideasColRef, {
+        text: ""
+      });
+      // Pas besoin d'appeler render() ici car onSnapshot va se déclencher
+    }
+    window.addIdea = addIdea;
+
+    /************************************
+     * 7. Mettre à jour une idée existante dans Firestore
+     ************************************/
+    async function updateIdea(id, newText) {
+      const ref = doc(db, "margauxIdeas", id);
+      await updateDoc(ref, {
+        text: newText
+      });
+    }
+
+    /************************************
+     * 8. Réinitialiser toutes les idées Margaux
+     ************************************/
+    async function resetIdeas() {
+      // Supprimer tous les docs dans margauxIdeas
+      const snap = await getDocs(ideasColRef);
+      const deletions = [];
+      snap.forEach(d => {
+        deletions.push(deleteDoc(doc(db, "margauxIdeas", d.id)));
+      });
+      await Promise.all(deletions);
+
+      // Reset affichage résultat tirage
+      const resultDiv = document.getElementById("result");
+      if (resultDiv) {
+        resultDiv.innerHTML = "";
+      }
+    }
+    window.resetIdeas = resetIdeas;
+
+    /************************************
+     * 9. Tirage au sort
+     ************************************/
+    function drawDate() {
+      const resultDiv = document.getElementById("result");
+      resultDiv.innerHTML = '<div class="loading">⏳ Tirage en cours...</div>';
+
+      setTimeout(() => {
+        // On prend les idées non vides côté Margaux
+        const margauxClean = margauxIdeasCache
+          .map(i => i.text?.trim())
+          .filter(x => x && x.length > 0);
+
+        const ulric = ulrichIdeas;
+
+        if (ulric.length === 0 && margauxClean.length === 0) {
+          resultDiv.textContent = "Aucune idée enregistrée pour le moment.";
+          return;
+        }
+
+        // 50/50 Margaux vs Ulric
+        const pickFrom = Math.random() < 0.5 ? "ulric" : "margaux";
+        let drawn;
+
+        if (pickFrom === "ulric" && ulric.length > 0) {
+          drawn = { text: ulric[Math.floor(Math.random() * ulric.length)], author: "Ulric" };
+        } else if (margauxClean.length > 0) {
+          drawn = { text: margauxClean[Math.floor(Math.random() * margauxClean.length)], author: "Margaux" };
+        } else {
+          // fallback si l'un est vide
+          const fullList = [
+            ...ulric.map(t => ({ text: t, author: "Ulric" })),
+            ...margauxClean.map(t => ({ text: t, author: "Margaux" }))
+          ];
+          drawn = fullList[Math.floor(Math.random() * fullList.length)];
+        }
+
+        resultDiv.innerHTML = `💡 <strong>Idée tirée</strong><br><br><em>${drawn.text}</em><br><br><small>✨ proposée par <strong>${drawn.author}</strong></small>`;
+      }, 800);
+    }
+    window.drawDate = drawDate;
+
+    /************************************
+     * 10. Écoute temps réel Firestore
+     *     -> met à jour margauxIdeasCache quand il y a un changement
+     *     -> rafraîchit l'affichage
+     ************************************/
+    onSnapshot(ideasColRef, (snapshot) => {
+      const data = [];
+      snapshot.forEach(docSnap => {
+        data.push({
+          id: docSnap.id,
+          ...docSnap.data()
+        });
+      });
+
+      // on garde l'ordre stable : le plus ancien en premier
+      // Firestore ne garantit pas l'ordre par défaut donc on ne trie pas par défaut,
+      // mais si tu veux tu peux trier alpha :
+      // data.sort((a, b) => (a.text || "").localeCompare(b.text || "", "fr"));
+
+      margauxIdeasCache = data;
+      renderIdeaList();
+    });
+
+    /************************************
+     * 11. Initialisation visuelle
+     ************************************/
+    // Quand la page se charge, l'écoute onSnapshot va remplir la liste automatiquement.
+    // Donc pas besoin d'appeler addIdea() ici.
+  </script>
 </body>
 </html>
