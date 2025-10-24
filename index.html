@@ -132,7 +132,7 @@
       border-color: #ff8a80;
     }
 
-    /* petite croix de suppression */
+    /* bouton suppression */
     .delete-btn {
       position: absolute;
       top: 8px;
@@ -232,12 +232,14 @@
       align-items: center;
       justify-content: center;
       z-index: 1000;
+      padding: 16px;
+      box-sizing: border-box;
     }
 
     .modal {
       background: #fff;
       border-radius: 16px;
-      width: 90%;
+      width: 100%;
       max-width: 320px;
       box-shadow: 0 20px 60px rgba(0,0,0,0.2);
       padding: 20px 20px 16px;
@@ -251,6 +253,11 @@
       font-size: 1rem;
       margin-bottom: 8px;
       color: #2c3e50;
+      line-height: 1.4rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
     }
 
     .modal-desc {
@@ -258,10 +265,18 @@
       color: #666;
       line-height: 1.3rem;
       margin-bottom: 16px;
+      text-align: center;
+    }
+
+    .pass-input-wrapper {
+      width: 100%;
+      display: flex;
+      justify-content: center;
     }
 
     .pass-input {
       width: 100%;
+      max-width: 260px;
       padding: 10px 12px;
       font-size: 16px;
       border-radius: 10px;
@@ -270,6 +285,8 @@
       letter-spacing: 0.15em;
       font-weight: 600;
       color: #2c3e50;
+      line-height: 1.2rem;
+      box-sizing: border-box;
     }
 
     .pass-input:focus {
@@ -308,16 +325,7 @@
       color: #e53935;
       margin-top: 6px;
       min-height: 1em;
-    }
-
-    /* Footer hint */
-    .footer-hint {
-      font-size: 0.75rem;
-      line-height: 1rem;
-      color: #666;
       text-align: center;
-      margin-top: 24px;
-      max-width: 400px;
     }
   </style>
 </head>
@@ -334,6 +342,7 @@
 
   <!-- CONTENU -->
   <div class="card">
+
     <!-- Écran Margaux -->
     <div id="screen-margaux" class="screen active">
       <div class="info-message">
@@ -387,26 +396,30 @@
     </div>
   </div>
 
-  <div class="footer-hint">
+  <div class="subtitle" style="max-width:400px; text-align:center; margin-top:24px; color:#666;">
     Les idées se mettent à jour en direct sur vos téléphones 📱💞
   </div>
 
   <!-- MODAL MOT DE PASSE ULRIC -->
   <div class="modal-overlay" id="passModal">
     <div class="modal">
-      <div class="modal-title">Accès idées Ulric 🔐</div>
+      <div class="modal-title">
+        <span>Accès idées Ulric</span> <span role="img" aria-label="lock">🔐</span>
+      </div>
       <div class="modal-desc">
-        Certaines idées sont secrètes (effet surprise 😏).<br>
+        Certaines idées sont secrètes (effet surprise 😉).<br>
         Entre le code pour les afficher :
       </div>
 
-      <input
-        id="passField"
-        class="pass-input"
-        type="password"
-        placeholder="••••••••"
-        inputmode="numeric"
-      />
+      <div class="pass-input-wrapper">
+        <input
+          id="passField"
+          class="pass-input"
+          type="password"
+          placeholder="••••••••"
+          inputmode="numeric"
+        />
+      </div>
 
       <div class="wrong-msg" id="wrongMsg"></div>
 
@@ -431,12 +444,13 @@
       deleteDoc,
       getDocs,
       doc,
-      onSnapshot
+      onSnapshot,
+      query,
+      orderBy
     } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 
     /************************************
      * 2. Firebase config
-     * (garde ta config ici)
      ************************************/
     const firebaseConfig = {
       apiKey: "AIzaSyCNzUwspWX6EOqYHHmueq5nmfTTFV5LPbA",
@@ -454,21 +468,24 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // deux collections séparées
+    // Collections
     const margauxColRef = collection(db, "margauxIdeas");
     const ulricColRef   = collection(db, "ulricIdeas");
 
-    // caches locaux
-    // chaque entrée = { id: "...", text: "..." }
+    // On prépare des requêtes ordonnées par createdAt croissant
+    const margauxQuery = query(margauxColRef, orderBy("createdAt", "asc"));
+    const ulricQuery   = query(ulricColRef,   orderBy("createdAt", "asc"));
+
+    // caches
     let margauxIdeasCache = [];
     let ulricIdeasCache   = [];
 
-    // flag d'accès
+    // accès Ulric
     let ulricUnlocked = false;
     const ACCESS_CODE = "06081998";
 
     /************************************
-     * 4. Gestion onglets
+     * 4. Onglets
      ************************************/
     function activateTab(tabName) {
       document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
@@ -484,11 +501,9 @@
     function goMargaux() {
       activateTab('margaux');
     }
-
     function goTirage() {
       activateTab('tirage');
     }
-
     function requestUlric() {
       if (ulricUnlocked) {
         const ulricTab = document.getElementById("tab-ulric");
@@ -504,7 +519,7 @@
     window.requestUlric = requestUlric;
 
     /************************************
-     * 5. Modal mot de passe
+     * 5. Modal mot de passe (aligné)
      ************************************/
     const passModal  = document.getElementById("passModal");
     const passField  = document.getElementById("passField");
@@ -516,21 +531,16 @@
       passModal.style.display = "flex";
       setTimeout(() => { passField.focus(); }, 50);
     }
-
     function closePassModal() {
       passModal.style.display = "none";
     }
-
     function validatePass() {
       const val = passField.value.trim();
       if (val === ACCESS_CODE) {
         ulricUnlocked = true;
         closePassModal();
-
-        // retire le style "locked"
         const ulricTab = document.getElementById("tab-ulric");
         ulricTab.classList.remove("locked","needs-code");
-
         activateTab('ulric');
       } else {
         wrongMsg.textContent = "Code incorrect 🙈";
@@ -541,7 +551,6 @@
         }, 800);
       }
     }
-
     function cancelPass() {
       closePassModal();
       activateTab('margaux');
@@ -551,10 +560,9 @@
     window.cancelPass   = cancelPass;
 
     /************************************
-     * 6. Débounce pour update Firestore
+     * 6. Débounce update Firestore
      ************************************/
     const updateTimers = {};
-
     async function debouncedUpdate(colName, id, newText) {
       const key = colName + "::" + id;
       clearTimeout(updateTimers[key]);
@@ -565,10 +573,15 @@
     }
 
     /************************************
-     * 7. Rendu & actions : Margaux
+     * 7. Rendu listes avec focus préservé
      ************************************/
-    function renderMargauxList() {
-      const container = document.getElementById('ideaListMargaux');
+    function renderList({
+      containerId,
+      cache,
+      colName,
+      deleteFn
+    }) {
+      const container = document.getElementById(containerId);
 
       // garde le focus courant
       const active = document.activeElement;
@@ -577,7 +590,7 @@
 
       container.innerHTML = "";
 
-      const ideasToRender = margauxIdeasCache.slice(0, 10);
+      const ideasToRender = cache.slice(0, 10);
 
       ideasToRender.forEach(entry => {
         const wrap = document.createElement('div');
@@ -588,14 +601,14 @@
         textarea.placeholder = "Idée de date";
         textarea.dataset.id = entry.id;
         textarea.addEventListener("input", () => {
-          debouncedUpdate("margauxIdeas", entry.id, textarea.value);
+          debouncedUpdate(colName, entry.id, textarea.value);
         });
 
         const delBtn = document.createElement('button');
         delBtn.className = 'delete-btn';
         delBtn.textContent = '✕';
         delBtn.addEventListener("click", () => {
-          deleteIdeaMargaux(entry.id);
+          deleteFn(entry.id);
         });
 
         wrap.appendChild(textarea);
@@ -603,7 +616,7 @@
         container.appendChild(wrap);
       });
 
-      // remettre le focus
+      // remettre le focus là où tu écrivais
       if (activeId) {
         const newActive = container.querySelector(`textarea[data-id='${activeId}']`);
         if (newActive) {
@@ -613,14 +626,42 @@
       }
     }
 
+    function renderMargauxList() {
+      renderList({
+        containerId: "ideaListMargaux",
+        cache: margauxIdeasCache,
+        colName: "margauxIdeas",
+        deleteFn: deleteIdeaMargaux
+      });
+    }
+
+    function renderUlricList() {
+      renderList({
+        containerId: "ideaListUlric",
+        cache: ulricIdeasCache,
+        colName: "ulricIdeas",
+        deleteFn: deleteIdeaUlric
+      });
+    }
+
+    /************************************
+     * 8. Ajouter / supprimer / reset MARGAUX
+     ************************************/
     async function addIdeaMargaux() {
       if (margauxIdeasCache.length >= 10) {
         alert("Tu ne peux ajouter que 10 idées maximum ✋");
         return;
       }
-      await addDoc(margauxColRef, {
-        text: ""
+
+      // on crée le doc avec createdAt
+      const docRef = await addDoc(margauxColRef, {
+        text: "",
+        createdAt: Date.now()
       });
+
+      // après création, on attend un mini instant que onSnapshot mette à jour le cache,
+      // puis on focus la dernière idée
+      setTimeout(() => focusLast("ideaListMargaux", docRef.id), 300);
     }
 
     async function deleteIdeaMargaux(id) {
@@ -641,66 +682,24 @@
       }
     }
 
-    window.addIdeaMargaux     = addIdeaMargaux;
-    window.resetIdeasMargaux  = resetIdeasMargaux;
+    window.addIdeaMargaux    = addIdeaMargaux;
+    window.resetIdeasMargaux = resetIdeasMargaux;
 
     /************************************
-     * 8. Rendu & actions : Ulric
+     * 9. Ajouter / supprimer / reset ULRIC
      ************************************/
-    function renderUlricList() {
-      const container = document.getElementById('ideaListUlric');
-
-      // garder le focus courant
-      const active = document.activeElement;
-      const activeId = active?.dataset?.id;
-      const cursorPos = active?.selectionStart || 0;
-
-      container.innerHTML = "";
-
-      const ideasToRender = ulricIdeasCache.slice(0, 10);
-
-      ideasToRender.forEach(entry => {
-        const wrap = document.createElement('div');
-        wrap.className = 'idea-block';
-
-        const textarea = document.createElement('textarea');
-        textarea.value = entry.text || "";
-        textarea.placeholder = "Idée surprise d'Ulric";
-        textarea.dataset.id = entry.id;
-        textarea.addEventListener("input", () => {
-          debouncedUpdate("ulricIdeas", entry.id, textarea.value);
-        });
-
-        const delBtn = document.createElement('button');
-        delBtn.className = 'delete-btn';
-        delBtn.textContent = '✕';
-        delBtn.addEventListener("click", () => {
-          deleteIdeaUlric(entry.id);
-        });
-
-        wrap.appendChild(textarea);
-        wrap.appendChild(delBtn);
-        container.appendChild(wrap);
-      });
-
-      // remettre le focus là où tu écrivais
-      if (activeId) {
-        const newActive = container.querySelector(`textarea[data-id='${activeId}']`);
-        if (newActive) {
-          newActive.focus();
-          try { newActive.setSelectionRange(cursorPos, cursorPos); } catch(e){}
-        }
-      }
-    }
-
     async function addIdeaUlric() {
       if (ulricIdeasCache.length >= 10) {
         alert("Tu ne peux ajouter que 10 idées maximum ✋");
         return;
       }
-      await addDoc(ulricColRef, {
-        text: ""
+
+      const docRef = await addDoc(ulricColRef, {
+        text: "",
+        createdAt: Date.now()
       });
+
+      setTimeout(() => focusLast("ideaListUlric", docRef.id), 300);
     }
 
     async function deleteIdeaUlric(id) {
@@ -725,7 +724,24 @@
     window.resetIdeasUlric = resetIdeasUlric;
 
     /************************************
-     * 9. Tirage (mélange Margaux & Ulric)
+     * 10. Focus automatique sur la DERNIÈRE idée ajoutée
+     ************************************/
+    function focusLast(containerId, newId) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+
+      // scroll en bas
+      container.scrollTop = container.scrollHeight;
+
+      // focus le textarea correspondant à l'ID qu'on vient de créer
+      const ta = container.querySelector(`textarea[data-id='${newId}']`);
+      if (ta) {
+        ta.focus();
+      }
+    }
+
+    /************************************
+     * 11. Tirage
      ************************************/
     function drawDate() {
       const resultDiv = document.getElementById("result");
@@ -745,7 +761,6 @@
           return;
         }
 
-        // On essaie 50/50
         const pickFrom = Math.random() < 0.5 ? "ulric" : "margaux";
         let drawnText = null;
         let drawnAuthor = null;
@@ -757,7 +772,6 @@
           drawnText = margauxClean[Math.floor(Math.random() * margauxClean.length)];
           drawnAuthor = "Margaux";
         } else {
-          // fallback : tout mélangé
           const fullList = [
             ...ulricClean.map(t => ({ t, a:"Ulric" })),
             ...margauxClean.map(t => ({ t, a:"Margaux" }))
@@ -776,10 +790,9 @@
     window.drawDate = drawDate;
 
     /************************************
-     * 10. Sync temps réel Firestore
+     * 12. Sync temps réel Firestore
      ************************************/
-    // Margaux
-    onSnapshot(margauxColRef, (snapshot) => {
+    onSnapshot(margauxQuery, (snapshot) => {
       const data = [];
       snapshot.forEach(docSnap => {
         data.push({ id: docSnap.id, ...docSnap.data() });
@@ -788,8 +801,7 @@
       renderMargauxList();
     });
 
-    // Ulric
-    onSnapshot(ulricColRef, (snapshot) => {
+    onSnapshot(ulricQuery, (snapshot) => {
       const data = [];
       snapshot.forEach(docSnap => {
         data.push({ id: docSnap.id, ...docSnap.data() });
@@ -799,9 +811,9 @@
     });
 
     /************************************
-     * 11. Init au chargement
+     * 13. Init
      ************************************/
-    // L'affichage va se dessiner automatiquement après les premiers snapshots.
+    // Le rendu sera déclenché par les onSnapshot ci-dessus.
   </script>
 </body>
 </html>
