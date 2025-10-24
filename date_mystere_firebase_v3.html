@@ -1,0 +1,167 @@
+
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Date Mystère ✨</title>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+    import { getDatabase, ref, get, set, push, onValue, remove } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCNzUwspWX6EOqYHHmueq5nmfTTFV5LPbA",
+      authDomain: "datemystere-c7580.firebaseapp.com",
+      projectId: "datemystere-c7580",
+      storageBucket: "datemystere-c7580.appspot.com",
+      messagingSenderId: "394663564435",
+      appId: "1:394663564435:web:505095cc42c3ad277d6966",
+      measurementId: "G-E4H4BR9C4T",
+      databaseURL: "https://datemystere-c7580-default-rtdb.europe-west1.firebasedatabase.app/"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    window.db = db;
+    window.ref = ref;
+    window.get = get;
+    window.set = set;
+    window.push = push;
+    window.onValue = onValue;
+    window.remove = remove;
+  </script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #ffe6e6, #e0f7fa);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1 {
+      color: #333;
+      margin-top: 20px;
+      text-align: center;
+    }
+    .tabs {
+      display: flex;
+      justify-content: center;
+      background: #fff;
+      border-bottom: 1px solid #ccc;
+      width: 100%;
+      max-width: 400px;
+    }
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 12px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.3s;
+    }
+    .tab:hover {
+      background: #f7f7f7;
+    }
+    .tab.disabled {
+      color: #aaa;
+      cursor: not-allowed;
+    }
+    .tab.active {
+      background: #ffe6e6;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 20px;
+      max-width: 360px;
+      width: 100%;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      margin-top: 20px;
+    }
+    .idea-block {
+      margin-bottom: 10px;
+    }
+    .idea-block textarea {
+      width: 100%;
+      padding: 10px;
+      font-size: 14px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      resize: none;
+      height: 3.2em;
+      line-height: 1.5em;
+      overflow-y: auto;
+      box-sizing: border-box;
+    }
+    .add-button, .reset-button {
+      background-color: #48c9b0;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+      width: 100%;
+    }
+    .add-button {
+      margin-top: 10px;
+      margin-bottom: 10px;
+    }
+    .reset-button {
+      background-color: #e67e22;
+      margin-top: 10px;
+    }
+    button {
+      background-color: #ff6f61;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 10px;
+      transition: 0.3s;
+      width: 100%;
+    }
+    button:hover {
+      background-color: #e85b4f;
+    }
+    .result {
+      margin-top: 20px;
+      font-size: 20px;
+      font-weight: bold;
+      color: #2c3e50;
+      text-align: center;
+      padding: 20px;
+      background: #fff9c4;
+      border-radius: 12px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.05);
+    }
+    .screen {
+      display: none;
+    }
+    .screen.active {
+      display: block;
+    }
+    .info-message {
+      font-size: 14px;
+      color: #666;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .loading {
+      font-size: 18px;
+      color: #999;
+      text-align: center;
+      padding: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎉 Générateur de Date Mystère</h1>
+  <p>Cette version Firebase nécessite d'être hébergée sur GitHub Pages pour fonctionner correctement.</p>
+</body>
+</html>
