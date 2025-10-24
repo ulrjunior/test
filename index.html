@@ -6,164 +6,390 @@
   <title>Date Mystère ✨</title>
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(135deg, #ffe6e6, #e0f7fa);
+      font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, Roboto, 'Helvetica Neue', sans-serif;
+      background: radial-gradient(circle at 20% 20%, #ffe6e6 0%, #fff 30%, #e0f7fa 100%);
       margin: 0;
-      padding: 0;
+      padding: 0 16px 60px;
       display: flex;
       flex-direction: column;
       align-items: center;
+      color: #2c3e50;
     }
+
     h1 {
-      color: #333;
+      color: #2c3e50;
       margin-top: 20px;
+      margin-bottom: 8px;
       text-align: center;
+      font-size: 1.5rem;
     }
+
+    .subtitle {
+      font-size: 0.9rem;
+      color: #666;
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    /* Tabs / Onglets */
     .tabs {
       display: flex;
       justify-content: center;
-      background: #fff;
-      border-bottom: 1px solid #ccc;
+      background: #ffffffcc;
+      border: 1px solid #ddd;
+      border-radius: 12px;
       width: 100%;
       max-width: 400px;
+      overflow: hidden;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.06);
     }
+
     .tab {
       flex: 1;
       text-align: center;
       padding: 12px;
       cursor: pointer;
-      font-weight: bold;
-      transition: background 0.3s;
+      font-weight: 600;
+      font-size: 0.9rem;
+      line-height: 1.2rem;
+      transition: background 0.2s, color 0.2s;
+      user-select: none;
+      border-right: 1px solid #eee;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
     }
-    .tab:hover {
-      background: #f7f7f7;
+
+    .tab:last-child {
+      border-right: none;
     }
-    .tab.disabled {
-      color: #aaa;
-      cursor: not-allowed;
-      pointer-events: none;
-    }
+
     .tab.active {
       background: #ffe6e6;
+      color: #2c3e50;
     }
-    .container {
-      background: white;
+
+    .tab.locked {
+      color: #999;
+    }
+
+    .tab.locked.needs-code {
+      cursor: pointer;
+      color: #444;
+    }
+
+    /* Cards / Conteneur */
+    .card {
+      background: #fff;
       padding: 20px;
       border-radius: 20px;
-      max-width: 360px;
+      max-width: 400px;
       width: 100%;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      box-shadow: 0 12px 32px rgba(0,0,0,0.07);
       margin-top: 20px;
     }
+
+    .info-message {
+      font-size: 0.9rem;
+      color: #666;
+      text-align: center;
+      margin-bottom: 20px;
+      line-height: 1.4rem;
+    }
+
     .idea-block {
       margin-bottom: 10px;
     }
+
     .idea-block textarea {
       width: 100%;
-      padding: 10px;
+      padding: 10px 12px;
       font-size: 14px;
-      border-radius: 8px;
+      border-radius: 10px;
       border: 1px solid #ccc;
       resize: none;
       height: 3.2em;
       line-height: 1.5em;
       overflow-y: auto;
       box-sizing: border-box;
+      background-color: #fff;
+      color: #2c3e50;
     }
-    .add-button, .reset-button {
+
+    .idea-block textarea:focus {
+      outline: 2px solid #ffb3b3;
+      border-color: #ff8a80;
+    }
+
+    .small-hint {
+      font-size: 0.8rem;
+      color: #888;
+      margin-top: 6px;
+      text-align: center;
+      line-height: 1.2rem;
+    }
+
+    /* Buttons */
+    .btn-row {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    button.action-btn {
       background-color: #48c9b0;
       color: white;
       border: none;
-      padding: 8px 12px;
-      border-radius: 8px;
+      padding: 10px 14px;
+      border-radius: 10px;
       cursor: pointer;
       font-size: 14px;
+      font-weight: 600;
       width: 100%;
+      min-height: 44px;
+      box-shadow: 0 6px 16px rgba(72,201,176,0.4);
     }
-    .add-button {
-      margin-top: 10px;
-      margin-bottom: 10px;
-    }
-    .reset-button {
+
+    button.reset-btn {
       background-color: #e67e22;
-      margin-top: 10px;
+      box-shadow: 0 6px 16px rgba(230,126,34,0.4);
     }
-    button.main-action {
+
+    button.draw-btn {
       background-color: #ff6f61;
-      color: white;
-      border: none;
-      padding: 12px 20px;
-      border-radius: 12px;
-      cursor: pointer;
-      font-size: 16px;
-      margin-top: 10px;
-      transition: 0.3s;
-      width: 100%;
+      box-shadow: 0 6px 16px rgba(255,111,97,0.4);
+      font-size: 15px;
     }
-    button.main-action:hover {
-      background-color: #e85b4f;
+
+    button.action-btn:active {
+      transform: scale(0.99);
     }
+
+    /* Result block */
     .result {
       margin-top: 20px;
-      font-size: 20px;
-      font-weight: bold;
+      font-size: 1rem;
+      font-weight: 600;
       color: #2c3e50;
       text-align: center;
-      padding: 20px;
+      padding: 16px;
       background: #fff9c4;
       border-radius: 12px;
       box-shadow: 0 0 10px rgba(0,0,0,0.05);
       min-height: 60px;
+      line-height: 1.4rem;
     }
-    .screen {
-      display: none;
-    }
-    .screen.active {
-      display: block;
-    }
-    .info-message {
-      font-size: 14px;
-      color: #666;
-      text-align: center;
-      margin-bottom: 20px;
-    }
+
     .loading {
-      font-size: 18px;
+      font-size: 1rem;
       color: #999;
       text-align: center;
       padding: 20px;
+    }
+
+    /* Screens (onglets contenus) */
+    .screen {
+      display: none;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    /* MODAL PASSWORD */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.4);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal {
+      background: #fff;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 320px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      padding: 20px 20px 16px;
+      text-align: center;
+      color: #2c3e50;
+      position: relative;
+    }
+
+    .modal-title {
+      font-weight: 600;
+      font-size: 1rem;
+      margin-bottom: 8px;
+      color: #2c3e50;
+    }
+
+    .modal-desc {
+      font-size: 0.85rem;
+      color: #666;
+      line-height: 1.3rem;
+      margin-bottom: 16px;
+    }
+
+    .pass-input {
+      width: 100%;
+      padding: 10px 12px;
+      font-size: 16px;
+      border-radius: 10px;
+      border: 1px solid #ccc;
+      text-align: center;
+      letter-spacing: 0.15em;
+      font-weight: 600;
+      color: #2c3e50;
+    }
+
+    .pass-input:focus {
+      outline: 2px solid #a5d6a7;
+      border-color: #4caf50;
+    }
+
+    .modal-btn-row {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .modal-btn {
+      background-color: #4caf50;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      min-height: 44px;
+      box-shadow: 0 6px 16px rgba(76,175,80,0.4);
+    }
+
+    .modal-cancel {
+      background-color: #ccc;
+      color: #333;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.15);
+    }
+
+    .wrong-msg {
+      font-size: 0.8rem;
+      color: #e53935;
+      margin-top: 6px;
+      min-height: 1em;
+    }
+
+    /* Footer hint */
+    .footer-hint {
+      font-size: 0.75rem;
+      line-height: 1rem;
+      color: #666;
+      text-align: center;
+      margin-top: 24px;
     }
   </style>
 </head>
 <body>
   <h1>🎉 Générateur de Date Mystère</h1>
+  <div class="subtitle">Vos idées partagées (et quelques surprises)</div>
 
+  <!-- ONGLET HEADER -->
   <div class="tabs">
-    <div class="tab active" onclick="switchTab('margaux')" id="tab-margaux">Idée Margaux</div>
-    <div class="tab disabled" id="tab-ulrich">Idée Ulric ✅</div>
-    <div class="tab" onclick="switchTab('tirage')" id="tab-tirage">Tirage au sort</div>
+    <div class="tab active" id="tab-margaux" onclick="goMargaux()">Idée Margaux</div>
+    <div class="tab locked needs-code" id="tab-ulric" onclick="requestUlric()">Idée Ulric 🔒</div>
+    <div class="tab" id="tab-tirage" onclick="goTirage()">Tirage au sort</div>
   </div>
 
-  <div class="container">
+  <!-- CONTENU -->
+  <div class="card">
     <!-- Écran Margaux -->
     <div id="screen-margaux" class="screen active">
-      <div class="info-message">Ajoute jusqu'à 10 idées de date. ✨<br>Les idées sont partagées entre vous deux.</div>
+      <div class="info-message">
+        Ajoute jusqu'à 10 idées de date. ✨<br>
+        Les idées sont partagées entre vous deux en temps réel.
+      </div>
+
       <div id="ideaList"></div>
-      <button class="add-button" onclick="addIdea()">+ Ajouter une idée</button>
-      <button class="reset-button" onclick="resetIdeas()">Réinitialiser</button>
+
+      <div class="btn-row">
+        <button class="action-btn" onclick="addIdea()">+ Ajouter une idée</button>
+        <button class="action-btn reset-btn" onclick="resetIdeas()">Réinitialiser</button>
+      </div>
+
+      <div class="small-hint">
+        Quand tu écris dans une case, c'est sauvegardé automatiquement.
+      </div>
+    </div>
+
+    <!-- Écran Ulric -->
+    <div id="screen-ulric" class="screen">
+      <div class="info-message">
+        Idées surprises préparées par Ulric 😏<br>
+        (ne pas lire si tu veux garder l'effet waouh 🙈)
+      </div>
+
+      <div id="ulricList"></div>
+
+      <div class="small-hint">
+        Ces idées ne sont visibles que si tu connais le code.
+      </div>
     </div>
 
     <!-- Écran Tirage -->
     <div id="screen-tirage" class="screen">
-      <h2>Tirage au Sort 🎉</h2>
-      <button class="main-action" onclick="drawDate()">Tirer au sort une idée !</button>
+      <div class="info-message">
+        On mélange vos idées 💘<br>
+        et on laisse le destin choisir.
+      </div>
+
+      <div class="btn-row">
+        <button class="action-btn draw-btn" onclick="drawDate()">Tirer au sort une idée ! 🎲</button>
+      </div>
+
       <div class="result" id="result"></div>
     </div>
   </div>
 
+  <div class="footer-hint">
+    Créé pour vous deux 💞 — les idées se mettent à jour sur vos téléphones.
+  </div>
+
+  <!-- MODAL MOT DE PASSE ULRIC -->
+  <div class="modal-overlay" id="passModal">
+    <div class="modal">
+      <div class="modal-title">Accès idées Ulric 🔐</div>
+      <div class="modal-desc">
+        Certaines idées sont secrètes (effet surprise 😏).<br>
+        Entre le code pour les afficher :
+      </div>
+
+      <input
+        id="passField"
+        class="pass-input"
+        type="password"
+        placeholder="••••••••"
+        inputmode="numeric"
+      />
+
+      <div class="wrong-msg" id="wrongMsg"></div>
+
+      <div class="modal-btn-row">
+        <button class="modal-btn" onclick="validatePass()">Valider</button>
+        <button class="modal-btn modal-cancel" onclick="cancelPass()">Annuler</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPT APP + FIREBASE -->
   <script type="module">
     /************************************
-     * 1. Imports Firebase
+     * 1. Firebase imports
      ************************************/
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
     import {
@@ -178,9 +404,8 @@
     } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 
     /************************************
-     * 2. CONFIG FIREBASE
-     * Remplace l'objet ci-dessous par TA config firebaseConfig
-     * (celle que tu m'as envoyée avec apiKey, authDomain, etc.)
+     * 2. Firebase config
+     * (ta config projet actuelle)
      ************************************/
     const firebaseConfig = {
       apiKey: "AIzaSyCNzUwspWX6EOqYHHmueq5nmfTTFV5LPbA",
@@ -193,99 +418,198 @@
     };
 
     /************************************
-     * 3. Init Firebase + Firestore
+     * 3. Init Firebase / Firestore
      ************************************/
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // On va stocker les idées Margaux dans une collection "margauxIdeas"
+    // Collection partagée Margaux → Firestore
     const ideasColRef = collection(db, "margauxIdeas");
 
-    // Cache local pour l'affichage et le tirage
-    // Chaque idée = { id: "...", text: "..." }
+    // Cache local pour les idées de Margaux
+    // Chaque entrée : { id: "...", text: "..." }
     let margauxIdeasCache = [];
 
-    // Idées Ulric en dur
-    const ulrichIdeas = [
+    // Idées Ulric (cachées derrière le code)
+    const ulricIdeas = [
       "Soirée sous les étoiles au Planétarium (je viens te chercher 🌌)",
-      "Voir un match des Gothiques d’Amiens (hockey 🔥 dans la meilleure division française)",
-      "Tour des estaminets secrets 🍻 (j’en connais 2-3 pépites dans le coin)",
-      "Soirée Podcast 🎧 : je t’interviewe sur un de tes voyages, façon podcast intime",
-      "Soirée Quiz à Lille 🧠 : je t’impressionne (ou te fais rire) avec ma culture plus ou moins fiable 😄"
+      "Voir un match de hockey 🔥 dans une patinoire où ça tape fort",
+      "Tour des estaminets cachés 🍻 (je t’emmène dans des endroits où t’es jamais allée)",
+      "Soirée Podcast 🎧 : je t’interviewe sur un de tes voyages, façon documentaire",
+      "Soirée Quiz à Lille 🧠 : je prépare un quiz perso sur nous deux",
+      "Roadtrip spontané : on monte en voiture, pas de plan, juste une direction",
+      "Brunch maison + marché aux puces le dimanche matin ☕🧁",
+      "Session Polaroid en mode touristes dans notre propre ville 📸",
+      "Patinoire ou roller disco 😏",
+      "Mini défi sport + resto doudou derrière (on se donne faim)"
     ];
 
-    /************************************
-     * 4. Changement d'onglet (UI)
-     ************************************/
-    function switchTab(tab) {
-      document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
-      document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
-      document.getElementById('tab-' + tab).classList.add('active');
-      document.getElementById('screen-' + tab).classList.add('active');
-    }
-    window.switchTab = switchTab;
+    // Flag accès aux idées Ulric
+    let ulricUnlocked = false;
+    const ACCESS_CODE = "06081998";
 
     /************************************
-     * 5. Affichage des idées Margaux à l'écran
+     * 4. Rendu UI : onglets
      ************************************/
+    function activateTab(tabName) {
+      // onglets visuels
+      document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+      // écrans
+      document.querySelectorAll('.screen').forEach(el => el.classList.remove('active'));
+
+      // activer l'onglet correspondant
+      const tabEl = document.getElementById('tab-' + tabName);
+      if (tabEl) tabEl.classList.add('active');
+
+      // activer l'écran correspondant
+      const screenEl = document.getElementById('screen-' + tabName);
+      if (screenEl) screenEl.classList.add('active');
+    }
+
+    // Ces fonctions sont appelées par les onglets
+    function goMargaux() {
+      activateTab('margaux');
+    }
+
+    function goTirage() {
+      activateTab('tirage');
+    }
+
+    function requestUlric() {
+      if (ulricUnlocked) {
+        // déjà débloqué
+        activateTab('ulric');
+        return;
+      }
+      openPassModal();
+    }
+
+    // On les expose au HTML
+    window.goMargaux = goMargaux;
+    window.goTirage = goTirage;
+    window.requestUlric = requestUlric;
+
+    /************************************
+     * 5. Modal mot de passe
+     ************************************/
+    const passModal = document.getElementById("passModal");
+    const passField = document.getElementById("passField");
+    const wrongMsg = document.getElementById("wrongMsg");
+
+    function openPassModal() {
+      wrongMsg.textContent = "";
+      passField.value = "";
+      passModal.style.display = "flex";
+      // petit délai pour garantir le focus après affichage
+      setTimeout(() => {
+        passField.focus();
+      }, 50);
+    }
+
+    function closePassModal() {
+      passModal.style.display = "none";
+    }
+
+    function validatePass() {
+      const val = passField.value.trim();
+      if (val === ACCESS_CODE) {
+        ulricUnlocked = true;
+        closePassModal();
+        // enlever le style "locked" visuellement
+        const ulricTab = document.getElementById("tab-ulric");
+        ulricTab.classList.remove("locked", "needs-code");
+        activateTab('ulric');
+      } else {
+        // mauvais code
+        wrongMsg.textContent = "Code incorrect 🙈";
+        ulricUnlocked = false;
+        // on ferme le modal et on revient sur Margaux
+        setTimeout(() => {
+          closePassModal();
+          activateTab('margaux');
+        }, 800);
+      }
+    }
+
+    function cancelPass() {
+      closePassModal();
+      activateTab('margaux');
+    }
+
+    // exposer pour boutons modal
+    window.validatePass = validatePass;
+    window.cancelPass = cancelPass;
+
+    /************************************
+     * 6. Affichage liste Margaux
+     *    (avec préservation du focus)
+     ************************************/
+    // timers pour limiter les updates Firestore
+    const updateTimers = {};
+
+    async function updateIdea(id, newText) {
+      // DEBOUNCE : on n'envoie pas chaque lettre, on attend un instant
+      clearTimeout(updateTimers[id]);
+      updateTimers[id] = setTimeout(async () => {
+        const ref = doc(db, "margauxIdeas", id);
+        await updateDoc(ref, { text: newText });
+      }, 400);
+    }
+
     function renderIdeaList() {
       const container = document.getElementById('ideaList');
+
+      // garder ce qu'on est en train d'éditer
+      const active = document.activeElement;
+      const activeId = active?.dataset?.id;
+      const cursorPos = active?.selectionStart || 0;
+
       container.innerHTML = "";
 
-      // Limite 10 idées visuellement
       const ideasToRender = margauxIdeasCache.slice(0, 10);
 
       ideasToRender.forEach(entry => {
-        const div = document.createElement('div');
-        div.className = 'idea-block';
+        const wrap = document.createElement('div');
+        wrap.className = 'idea-block';
 
-        // On crée un textarea pré-rempli
         const textarea = document.createElement('textarea');
         textarea.value = entry.text || "";
         textarea.placeholder = "Idée de date";
+        textarea.dataset.id = entry.id;
+
         textarea.addEventListener("input", () => {
-          // on met à jour Firestore à chaque modif
           updateIdea(entry.id, textarea.value);
         });
 
-        div.appendChild(textarea);
-        container.appendChild(div);
+        wrap.appendChild(textarea);
+        container.appendChild(wrap);
       });
+
+      // remets le focus là où tu écrivais
+      if (activeId) {
+        const newActive = container.querySelector(`textarea[data-id='${activeId}']`);
+        if (newActive) {
+          newActive.focus();
+          try { newActive.setSelectionRange(cursorPos, cursorPos); } catch(e){}
+        }
+      }
     }
 
     /************************************
-     * 6. Ajouter une nouvelle idée
+     * 7. Ajouter / Reset idées Margaux
      ************************************/
     async function addIdea() {
-      // Vérifier qu'on n'a pas déjà 10 idées
       if (margauxIdeasCache.length >= 10) {
         alert("Tu ne peux ajouter que 10 idées maximum ✋");
         return;
       }
-
-      // Créer une nouvelle idée vide dans Firestore
       await addDoc(ideasColRef, {
         text: ""
       });
-      // Pas besoin d'appeler render() ici car onSnapshot va se déclencher
     }
     window.addIdea = addIdea;
 
-    /************************************
-     * 7. Mettre à jour une idée existante dans Firestore
-     ************************************/
-    async function updateIdea(id, newText) {
-      const ref = doc(db, "margauxIdeas", id);
-      await updateDoc(ref, {
-        text: newText
-      });
-    }
-
-    /************************************
-     * 8. Réinitialiser toutes les idées Margaux
-     ************************************/
     async function resetIdeas() {
-      // Supprimer tous les docs dans margauxIdeas
       const snap = await getDocs(ideasColRef);
       const deletions = [];
       snap.forEach(d => {
@@ -293,7 +617,6 @@
       });
       await Promise.all(deletions);
 
-      // Reset affichage résultat tirage
       const resultDiv = document.getElementById("result");
       if (resultDiv) {
         resultDiv.innerHTML = "";
@@ -302,26 +625,49 @@
     window.resetIdeas = resetIdeas;
 
     /************************************
-     * 9. Tirage au sort
+     * 8. Affichage idées Ulric (en lecture seule)
+     ************************************/
+    function renderUlricList() {
+      const ulricList = document.getElementById("ulricList");
+      ulricList.innerHTML = "";
+
+      ulricIdeas.forEach(text => {
+        const block = document.createElement('div');
+        block.className = 'idea-block';
+
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.readOnly = true;
+        ta.style.backgroundColor = "#fdfdfd";
+        ta.style.borderColor = "#bbb";
+        ta.style.color = "#2c3e50";
+
+        block.appendChild(ta);
+        ulricList.appendChild(block);
+      });
+    }
+
+    /************************************
+     * 9. Tirage (mélange Margaux & Ulric)
      ************************************/
     function drawDate() {
       const resultDiv = document.getElementById("result");
       resultDiv.innerHTML = '<div class="loading">⏳ Tirage en cours...</div>';
 
       setTimeout(() => {
-        // On prend les idées non vides côté Margaux
+        // idées propres de Margaux
         const margauxClean = margauxIdeasCache
           .map(i => i.text?.trim())
           .filter(x => x && x.length > 0);
 
-        const ulric = ulrichIdeas;
+        const ulric = ulricIdeas;
 
         if (ulric.length === 0 && margauxClean.length === 0) {
           resultDiv.textContent = "Aucune idée enregistrée pour le moment.";
           return;
         }
 
-        // 50/50 Margaux vs Ulric
+        // 50/50 Margaux vs Ulric d'abord...
         const pickFrom = Math.random() < 0.5 ? "ulric" : "margaux";
         let drawn;
 
@@ -330,7 +676,7 @@
         } else if (margauxClean.length > 0) {
           drawn = { text: margauxClean[Math.floor(Math.random() * margauxClean.length)], author: "Margaux" };
         } else {
-          // fallback si l'un est vide
+          // fallback : mélange total
           const fullList = [
             ...ulric.map(t => ({ text: t, author: "Ulric" })),
             ...margauxClean.map(t => ({ text: t, author: "Margaux" }))
@@ -338,15 +684,16 @@
           drawn = fullList[Math.floor(Math.random() * fullList.length)];
         }
 
-        resultDiv.innerHTML = `💡 <strong>Idée tirée</strong><br><br><em>${drawn.text}</em><br><br><small>✨ proposée par <strong>${drawn.author}</strong></small>`;
-      }, 800);
+        resultDiv.innerHTML =
+          `💡 <strong>Idée tirée</strong><br><br>` +
+          `<em>${drawn.text}</em><br><br>` +
+          `<small>✨ proposée par <strong>${drawn.author}</strong></small>`;
+      }, 600);
     }
     window.drawDate = drawDate;
 
     /************************************
-     * 10. Écoute temps réel Firestore
-     *     -> met à jour margauxIdeasCache quand il y a un changement
-     *     -> rafraîchit l'affichage
+     * 10. Sync temps réel Firestore (Margaux)
      ************************************/
     onSnapshot(ideasColRef, (snapshot) => {
       const data = [];
@@ -356,21 +703,15 @@
           ...docSnap.data()
         });
       });
-
-      // on garde l'ordre stable : le plus ancien en premier
-      // Firestore ne garantit pas l'ordre par défaut donc on ne trie pas par défaut,
-      // mais si tu veux tu peux trier alpha :
-      // data.sort((a, b) => (a.text || "").localeCompare(b.text || "", "fr"));
-
       margauxIdeasCache = data;
       renderIdeaList();
     });
 
     /************************************
-     * 11. Initialisation visuelle
+     * 11. Init au chargement
      ************************************/
-    // Quand la page se charge, l'écoute onSnapshot va remplir la liste automatiquement.
-    // Donc pas besoin d'appeler addIdea() ici.
+    renderUlricList(); // remplir l'onglet Ulric (lecture seule)
+    // l'onglet Margaux se remplit via onSnapshot dès qu'on reçoit les données
   </script>
 </body>
 </html>
